@@ -4,8 +4,8 @@ CWARNFLAGS := -Wall -Wold-style-cast -Wundef -Wsign-compare \
 			  -Wconversion -Wpointer-arith -pedantic 
 CFLAGS := $(CWARNFLAGS) -g -O2  -I./build/include
 LDFLAGS:= -L./build/lib 
-LDLIBS := -lpthread 
-#./build/lib/libdvbpsi.a
+LDLIBS := -lpthread \
+		  ./build/lib/libdvbpsi.a
 
 #prefix := /usr
 
@@ -13,12 +13,14 @@ tsmux_BIN := tsmux
 tsmux_SRC := main.c \
 			 block.c \
 			 pes.c \
-			 csa.c
+			 csa.c	\
+			 tsmux.c
 
 tsmux_OBJ := main.o \
 			 block.o \
 			 pes.o \
-			 csa.o
+			 csa.o \
+			 tsmux.o
 
 
 .PHONY: all clean
