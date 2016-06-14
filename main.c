@@ -4,6 +4,7 @@
 
 #include "vlc_block.h"
 #include "csa.h"
+#include "tsmux.h"
 
 int main( int argc , char ** argv)
 {
@@ -22,6 +23,10 @@ int main( int argc , char ** argv)
 	p_csa = csa_New();
 	
 	csa_Delete(p_csa);
+	
+	sout_mux_t * p_mux = soutOpen(NULL,NULL,0);
+	
+	soutClose(p_mux);
 	
 	return 0;
 }

@@ -11,13 +11,21 @@ typedef struct sout_param_t sout_param_t;
 
 typedef struct sout_input_t sout_input_t;
 
-sout_mux_t* soutMuxOpen( sout_param_t * );
+typedef void (* sout_ts_write_cb)(  uint32_t i_handle ,
+									unsigned char p_ts_data,
+									size_t i_size);
+                                   
+sout_mux_t* soutOpen( sout_param_t * ,sout_ts_write_cb , uint32_t );
 
-void soutMuxClose( sout_mux_t * );
-int  soutMuxWrite( sout_mux_t * , unsigned char * p_data , uint16_t i_size,
+void soutClose( sout_mux_t * );
+
+int  soutWrite( sout_input_t * , unsigned char * p_es_data , uint16_t i_size,
 				  int64_t i_length, int64_t i_pts, int64_t i_dts, int64_t i_flags);
-int  soutAddStream( sout_mux_t* , es_format_t *p_fmt);
-int  soutDelStream( sout_mux_t* , ts_stream_t *);
+				  
+sout_input_t *  soutAddStream( sout_mux_t* , es_format_t *p_fmt);
+
+int  soutDelStream( sout_mux_t* , sout_input_t *);
+
 
 
 #endif

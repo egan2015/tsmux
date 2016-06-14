@@ -1,7 +1,6 @@
 VERSION := 0.0.1
 OS ?= $(shell uname -s)
-CWARNFLAGS := -Wall -Wold-style-cast -Wundef -Wsign-compare \
-			  -Wconversion -Wpointer-arith -pedantic 
+CWARNFLAGS := -Wall
 CFLAGS := $(CWARNFLAGS) -g -O2  -I./build/include
 LDFLAGS:= -L./build/lib 
 LDLIBS := -lpthread \
