@@ -141,6 +141,8 @@ struct block_t
  void block_Init( block_t *, void *, size_t );
  block_t *block_Alloc( size_t )  ;
  block_t *block_Realloc( block_t *, ssize_t i_pre, size_t i_body ) ;
+ 
+#define block_New( dummy, size ) block_Alloc(size)
 
 static inline void block_CopyProperties( block_t *dst, block_t *src )
 {
@@ -169,11 +171,12 @@ static inline void block_Release( block_t *p_block )
     p_block->pf_release( p_block );
 }
 
- block_t *block_heap_Alloc(void *, size_t)  ;
- block_t *block_mmap_Alloc(void *addr, size_t length)  ;
- block_t * block_shm_Alloc(void *addr, size_t length)  ;
- block_t *block_File(int fd)  ;
- block_t *block_FilePath(const char *)  ;
+
+block_t *block_heap_Alloc(void *, size_t)  ;
+block_t *block_mmap_Alloc(void *addr, size_t length)  ;
+block_t * block_shm_Alloc(void *addr, size_t length)  ;
+block_t *block_File(int fd)  ;
+block_t *block_FilePath(const char *)  ;
 
 static inline void block_Cleanup (void *block)
 {

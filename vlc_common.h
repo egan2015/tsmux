@@ -191,8 +191,13 @@ static inline void vlc_fourcc_to_char( vlc_fourcc_t fcc, char *psz_fourcc )
         vlc_fourcc_to_char( (vlc_fourcc_t)(a), (char *)(b) )
 
 
+/* Format */
+typedef struct audio_format_t audio_format_t;
+typedef struct video_format_t video_format_t;
+typedef struct subs_format_t subs_format_t;
 typedef struct es_format_t es_format_t;
 typedef struct video_palette_t video_palette_t;
+
 
 
 typedef struct sout_mux_t sout_mux_t;
