@@ -449,7 +449,7 @@ void soutClose( sout_mux_t * p_sys )
 }
 
 
-int  soutWrite( sout_input_t * p_input, unsigned char * p_es_data , uint16_t i_size,
+int  sout_stream_mux( sout_input_t * p_input, unsigned char * p_es_data , uint16_t i_size,
 				  int64_t i_length, int64_t i_pts, int64_t i_dts, int64_t i_flags)
 {
 	block_t *p_es = block_Alloc( i_size );
@@ -463,6 +463,12 @@ int  soutWrite( sout_input_t * p_input, unsigned char * p_es_data , uint16_t i_s
 	return Mux(p_input->p_sys);
 }
 
+int  sout_block_mux(sout_input_t * p_input , block_t *p_nal )
+{
+	block_FifoPut( p_input->p_fifo,p_nal);
+	
+	return Mux(p_input->p_sys);	
+}
 
 sout_input_t * soutAddStream( sout_mux_t* p_sys, es_format_t *p_fmt)
 {

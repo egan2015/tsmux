@@ -229,6 +229,10 @@ static h264_demux_t * demux_open( )
     for( i = 0; i < PPS_MAX; i++ )
         p_pack->pp_pps[i] = NULL;
 
+	p_pack->fmt_out.i_codec = VLC_CODEC_H264;
+	p_pack->fmt_out.i_extra = 0;
+    p_pack->fmt_out.p_extra = NULL;	
+    
     p_pack->slice.i_nal_type = -1;
     p_pack->slice.i_nal_ref_idc = -1;
     p_pack->slice.i_idr_pic_id = -1;

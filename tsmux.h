@@ -20,8 +20,9 @@ sout_mux_t* soutOpen( sout_param_t * ,sout_ts_write_cb , void* );
 
 void soutClose( sout_mux_t * );
 
-int  soutWrite( sout_input_t * , unsigned char * p_es_data , uint16_t i_size,
+int  sout_stream_mux( sout_input_t * , unsigned char * p_es_data , uint16_t i_size,
 				  int64_t i_length, int64_t i_pts, int64_t i_dts, int64_t i_flags);
+int  sout_block_mux(sout_input_t * , block_t *);
 				  
 sout_input_t *  soutAddStream( sout_mux_t* , es_format_t *p_fmt);
 
