@@ -209,8 +209,8 @@ struct sout_mux_t{
     bool            b_crypt_audio;
     bool            b_crypt_video;
     
-    void (*p_access)(uint32_t i_handle ,unsigned char * p_ts_data , size_t i_size  );
-    uint32_t 		i_handle;
+    void (*p_access)(void* p_private ,unsigned char * p_ts_data , size_t i_size  );
+    void 		   *p_private;
     
     // sout_mux_t 
     int            i_nb_inputs;
@@ -295,7 +295,7 @@ static void TSSetPCR( block_t *p_ts, mtime_t i_dts );
 static void PEStoTS  ( sout_buffer_chain_t *, block_t *, ts_stream_t * );
 
 
-sout_mux_t* soutOpen( sout_param_t * p_param ,sout_ts_write_cb callback, uint32_t i_handle )
+sout_mux_t* soutOpen( sout_param_t * p_param ,sout_ts_write_cb callback, void* p_private )
 {
 	int i;
 	sout_mux_t * p_sys = malloc( sizeof(sout_mux_t));
@@ -313,7 +313,7 @@ sout_mux_t* soutOpen( sout_param_t * p_param ,sout_ts_write_cb callback, uint32_
     memset( p_sys->sdt_descriptors, 0, sizeof(sdt_desc_t) );
 
 	p_sys->p_access = callback;
-	p_sys->i_handle = i_handle;
+	p_sys->p_private = p_private;
 	
     p_sys->i_audio_bound = 0;
     p_sys->i_video_bound = 0;
@@ -1855,7 +1855,7 @@ static void TSDate( sout_mux_t *p_mux, sout_buffer_chain_t *p_chain_ts,
         //sout_AccessOutWrite( p_mux->p_access, p_ts );
         // TODO: sout_AccessOutWrite
         if ( p_sys->p_access )
-			p_sys->p_access(p_sys->i_handle,p_ts->p_buffer,p_ts->i_buffer);
+			p_sys->p_access(p_sys->p_private,p_ts->p_buffer,p_ts->i_buffer);
     }
 }
 
