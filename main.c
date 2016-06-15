@@ -785,7 +785,7 @@ static void PutPPS( h264_demux_t *p_dec, block_t *p_frag )
     i_sps_id = bs_read_ue( &s ); // sps id
     if( i_pps_id >= PPS_MAX || i_sps_id >= SPS_MAX )
     {
-        fprintf( stderr, "invalid PPS (pps_id=%d sps_id=%d)", i_pps_id, i_sps_id );
+        fprintf( stderr, "invalid PPS (pps_id=%d sps_id=%d)\n", i_pps_id, i_sps_id );
         block_Release( p_frag );
         return;
     }
@@ -1017,6 +1017,8 @@ static void demux_h264 ( const char * filename ){
 			p_block_out = p_next;
 		}
 	}
+	fprintf(stderr,"video (%d x %d ) \n",p_pack->fmt_out.video.i_width
+										,p_pack->fmt_out.video.i_height);
 	demux_close(p_pack);
 }
 
