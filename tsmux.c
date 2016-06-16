@@ -632,7 +632,7 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
     if( !p_stream->lang )
         goto oom;
 
-    fprintf( stderr, "adding input codec=%4.4s pid=%d",
+    fprintf( stderr, "adding input codec=%4.4s pid=%d\n",
              (char*)&p_stream->i_codec, p_stream->i_pid );
 
     for (int i = 0; i < p_stream->i_langs; i++) {
@@ -884,6 +884,7 @@ static bool MuxStreams(sout_mux_t *p_mux )
             p_pcr_stream->i_pes_dts + p_pcr_stream->i_pes_length )
             continue;
 
+
         /* Need more data */
         if( block_FifoCount( p_input->p_fifo ) <= 1 )
         {
@@ -935,6 +936,7 @@ static bool MuxStreams(sout_mux_t *p_mux )
         }
         else
             p_data = FixPES( p_mux, p_input->p_fifo );
+
 
         if( block_FifoCount( p_input->p_fifo ) > 0 &&
             p_input->p_fmt->i_cat != SPU_ES )
@@ -1227,6 +1229,8 @@ static block_t *FixPES( sout_mux_t *p_mux, block_fifo_t *p_fifo )
     block_t *p_data;
     size_t i_size;
 
+	fprintf(stderr,"FixPES \n");
+
     p_data = block_FifoShow( p_fifo );
     i_size = p_data->i_buffer;
 
@@ -1290,6 +1294,8 @@ static block_t *Add_ADTS( block_t *p_data, es_format_t *p_fmt )
 
     uint8_t *p_extra = p_fmt->p_extra;
 
+	fprintf(stderr,"Add_ADTS \n");
+
     if( !p_data || p_fmt->i_extra < 2 || !p_extra )
         return p_data; /* no data to construct the headers */
 
@@ -1342,6 +1348,8 @@ static void TSSchedule( sout_mux_t *p_mux, sout_buffer_chain_t *p_chain_ts,
     sout_mux_t  *p_sys = p_mux;
     sout_buffer_chain_t new_chain;
     int i_packet_count = p_chain_ts->i_depth;
+
+	fprintf(stderr,"TSSchedule \n");
 
     BufferChainInit( &new_chain );
 
@@ -1434,6 +1442,8 @@ static void GetPAT( sout_mux_t *p_mux,
     block_t              *p_pat;
     dvbpsi_pat_t         pat;
     dvbpsi_psi_section_t *p_section;
+
+	fprintf(stderr,"GetPAT \n");
 
     dvbpsi_InitPAT( &pat, p_sys->i_tsid, p_sys->i_pat_version_number,
                     1 );      /* b_current_next */
@@ -1593,6 +1603,8 @@ static void GetPMTmpeg4(sout_mux_t *p_mux)
 static void GetPMT( sout_mux_t *p_mux, sout_buffer_chain_t *c )
 {
     sout_mux_t *p_sys = p_mux;
+
+	fprintf(stderr,"GetPMT \n");
 
     if( p_sys->dvbpmt == NULL )
     {
@@ -1874,6 +1886,8 @@ static block_t *TSNew( sout_mux_t *p_mux, ts_stream_t *p_stream,
     bool b_new_pes = false;
     bool b_adaptation_field = false;
 
+	fprintf(stderr,"TSNew \n");
+
     int i_payload_max = 184 - ( b_pcr ? 8 : 0 );
 
     if( p_stream->i_pes_used <= 0 )
@@ -1984,7 +1998,7 @@ static block_t *TSNew( sout_mux_t *p_mux, ts_stream_t *p_stream,
 static void TSSetPCR( block_t *p_ts, mtime_t i_dts )
 {
     mtime_t i_pcr = 9 * i_dts / 100;
-
+	
     p_ts->p_buffer[6]  = ( i_pcr >> 25 )&0xff;
     p_ts->p_buffer[7]  = ( i_pcr >> 17 )&0xff;
     p_ts->p_buffer[8]  = ( i_pcr >> 9  )&0xff;
@@ -2000,6 +2014,7 @@ static void PEStoTS( sout_buffer_chain_t *c, block_t *p_pes,
     int      i_size = p_pes->i_buffer;
 
     bool    b_new_pes = true;
+	fprintf(stderr,"PEStoTS \n");
 
     for (;;)
     {

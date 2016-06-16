@@ -13,7 +13,7 @@ typedef struct sout_param_t sout_param_t;
 typedef struct sout_input_t sout_input_t;
 
 typedef void (* sout_ts_write_cb)(  void* p_private ,
-									unsigned char p_ts_data,
+									unsigned char *p_ts_data,
 									size_t i_size);
                                    
 sout_mux_t* soutOpen( sout_param_t * ,sout_ts_write_cb , void* );

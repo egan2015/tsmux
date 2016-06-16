@@ -97,6 +97,11 @@ void block_Init( block_t *restrict b, void *buf, size_t size )
 #endif
 }
 
+static void BlockRelease( block_t *p_block )
+{
+    free( p_block );
+}
+
 static void block_generic_Release (block_t *block)
 {
     /* That is always true for blocks allocated with block_Alloc(). */
@@ -144,7 +149,7 @@ block_t *block_Alloc (size_t size)
     b->p_buffer += BLOCK_PADDING + BLOCK_ALIGN - 1;
     b->p_buffer = (void *)(((uintptr_t)b->p_buffer) & ~(BLOCK_ALIGN - 1));
     b->i_buffer = size;
-    b->pf_release = block_generic_Release;
+	b->pf_release = BlockRelease;
     return b;
 }
 

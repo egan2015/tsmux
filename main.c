@@ -230,6 +230,7 @@ static h264_demux_t * demux_open( )
         p_pack->pp_pps[i] = NULL;
 
 	p_pack->fmt_out.i_codec = VLC_CODEC_H264;
+	p_pack->fmt_out.i_cat = VIDEO_ES;
 	p_pack->fmt_out.i_extra = 0;
     p_pack->fmt_out.p_extra = NULL;	
     
@@ -545,9 +546,19 @@ static block_t *OutputPicture( h264_demux_t *p_dec )
             if( p_sys->pp_pps[i] )
                 block_ChainAppend( &p_list, block_Duplicate( p_sys->pp_pps[i] ) );
         }
+        
         if( b_sps_pps_i && p_list )
             p_sys->b_header = true;
-
+		
+		if ( p_sys->b_header )
+		{
+			if ( p_sys->fmt_out.p_extra )
+				free(p_sys->fmt_out.p_extra);
+			block_ChainProperties(p_list,NULL,&p_sys->fmt_out.i_extra,NULL);
+			p_sys->fmt_out.p_extra = malloc( p_sys->fmt_out.i_extra );
+			block_ChainExtract(p_list,p_sys->fmt_out.p_extra,p_sys->fmt_out.i_extra);
+		}
+		
         if( p_head )
             p_head->p_next = p_list;
         else
@@ -990,10 +1001,17 @@ static block_t * demux_read( FILE* fd ){
 	return NULL;
 }
 
+static void h264_ts_callback(void * p_private, unsigned char * p_ts_data , size_t i_size )
+{
+	fprintf( stderr , " Receive h264 ts stream :%d\n",i_size);
+}
+
 static void demux_h264 ( const char * filename ){
 	block_t * p_block_in = NULL;
 	uint32_t i_count_nals = 0;
 	h264_demux_t * p_pack = demux_open();
+	sout_mux_t * p_mux = soutOpen(NULL,h264_ts_callback,NULL);
+	sout_input_t * p_h264_input = 0;
 	FILE *fd = fopen( filename ,"rb");
 	while ( (p_block_in = demux_read(fd) ) )
 	{
@@ -1007,14 +1025,16 @@ static void demux_h264 ( const char * filename ){
 			
 			int	 i_nal_type = p_block_out->p_buffer[4]&0x1f;
 
-			fprintf(stderr,"demux h264 : %d startCode %d,%d,%d,%d naltype : %d nal_length : %d\n"
-			,++i_count_nals
-			,p_block_out->p_buffer[0]
-			,p_block_out->p_buffer[1]
-			,p_block_out->p_buffer[2]
-			,p_block_out->p_buffer[3]
-			,i_nal_type
-			,p_block_out->i_buffer);
+			fprintf(stderr,"demux h264 : %d naltype : %d nal_length : %d\n"
+							,++i_count_nals
+							,i_nal_type
+							,p_block_out->i_buffer);
+			
+			if ( p_pack->b_header && p_h264_input == NULL ){
+				p_h264_input = soutAddStream(p_mux,&p_pack->fmt_out);
+			}
+			if ( p_h264_input )
+				sout_block_mux(p_h264_input,p_block_out);
 			
 			block_Release(p_block_out);
 			
@@ -1023,6 +1043,9 @@ static void demux_h264 ( const char * filename ){
 	}
 	fprintf(stderr,"video (%d x %d ) \n",p_pack->fmt_out.video.i_width
 										,p_pack->fmt_out.video.i_height);
+	if ( p_h264_input )
+		soutDelStream(p_mux,p_h264_input);
+	soutClose(p_mux);
 	demux_close(p_pack);
 }
 
