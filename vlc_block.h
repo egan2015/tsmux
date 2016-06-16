@@ -53,6 +53,8 @@
  *   optimised for preheader/postdatas increase)
  ****************************************************************************/
 
+typedef struct block_sys_t block_sys_t;
+
 /** The content doesn't follow the last block, or is probably broken */
 #define BLOCK_FLAG_DISCONTINUITY 0x0001
 /** Intra frame */
@@ -99,24 +101,23 @@
 #define BLOCK_FLAG_PRIVATE_MASK  0xff000000
 #define BLOCK_FLAG_PRIVATE_SHIFT 24
 
-
 typedef void (*block_free_t) (block_t *);
 
 struct block_t
 {
-    block_t    *p_next;
-
-    uint8_t    *p_buffer; /**< Payload start */
-    size_t      i_buffer; /**< Payload length */
-    uint8_t    *p_start; /**< Buffer start */
-    size_t      i_size; /**< Buffer total size */
+    block_t     *p_next;
 
     uint32_t    i_flags;
-    unsigned    i_nb_samples; /* Used for audio */
 
     mtime_t     i_pts;
     mtime_t     i_dts;
     mtime_t     i_length;
+
+    unsigned    i_nb_samples; /* Used for audio */
+    int         i_rate;
+
+    size_t      i_buffer;
+    uint8_t     *p_buffer;
 
     /* Rudimentary support for overloading block (de)allocation. */
     block_free_t pf_release;
@@ -138,21 +139,11 @@ struct block_t
  *      and decrease are supported). Use it as it is optimised.
  * - block_Duplicate : create a copy of a block.
  ****************************************************************************/
- void block_Init( block_t *, void *, size_t );
- block_t *block_Alloc( size_t )  ;
- block_t *block_Realloc( block_t *, ssize_t i_pre, size_t i_body ) ;
- 
+void      block_Init    ( block_t *, void *, size_t ) ;
+block_t * block_Alloc   ( size_t );
+block_t * block_Realloc ( block_t *, ssize_t i_pre, size_t i_body );
+
 #define block_New( dummy, size ) block_Alloc(size)
-
-static inline void block_CopyProperties( block_t *dst, block_t *src )
-{
-    dst->i_flags   = src->i_flags;
-    dst->i_nb_samples = src->i_nb_samples;
-    dst->i_dts     = src->i_dts;
-    dst->i_pts     = src->i_pts;
-    dst->i_length  = src->i_length;
-}
-
 
 static inline block_t *block_Duplicate( block_t *p_block )
 {
@@ -160,7 +151,12 @@ static inline block_t *block_Duplicate( block_t *p_block )
     if( p_dup == NULL )
         return NULL;
 
-    block_CopyProperties( p_dup, p_block );
+    p_dup->i_dts     = p_block->i_dts;
+    p_dup->i_pts     = p_block->i_pts;
+    p_dup->i_flags   = p_block->i_flags;
+    p_dup->i_length  = p_block->i_length;
+    p_dup->i_rate    = p_block->i_rate;
+    p_dup->i_nb_samples = p_block->i_nb_samples;
     memcpy( p_dup->p_buffer, p_block->p_buffer, p_block->i_buffer );
 
     return p_dup;
@@ -171,12 +167,9 @@ static inline void block_Release( block_t *p_block )
     p_block->pf_release( p_block );
 }
 
-
-block_t *block_heap_Alloc(void *, size_t)  ;
-block_t *block_mmap_Alloc(void *addr, size_t length)  ;
-block_t * block_shm_Alloc(void *addr, size_t length)  ;
-block_t *block_File(int fd)  ;
-block_t *block_FilePath(const char *)  ;
+block_t * block_heap_Alloc (void *, void *, size_t);
+block_t * block_mmap_Alloc (void *addr, size_t length);
+block_t * block_File (int fd);
 
 static inline void block_Cleanup (void *block)
 {
@@ -189,7 +182,7 @@ static inline void block_Cleanup (void *block)
  ****************************************************************************
  * - block_ChainAppend : append a block to the last block of a chain. Try to
  *      avoid using with a lot of data as it's really slow, prefer
- *      block_ChainLastAppend, p_block can be NULL
+ *      block_ChainLastAppend
  * - block_ChainLastAppend : use a pointer over a pointer to the next blocks,
  *      and update it.
  * - block_ChainRelease : release a chain of block
@@ -309,19 +302,21 @@ static inline block_t *block_ChainGather( block_t *p_list )
  *      needed), be carefull, you can use it ONLY if you are sure to be the
  *      only one getting data from the fifo.
  * - block_FifoCount : how many packets are waiting in the fifo
+ * - block_FifoWake : wake ups a thread with block_FifoGet() = NULL
+ *   (this is used to wakeup a thread when there is no data to queue)
  *
  * block_FifoGet and block_FifoShow are cancellation points.
  ****************************************************************************/
 
- block_fifo_t *block_FifoNew( void )  ;
- void block_FifoRelease( block_fifo_t * );
- void block_FifoPace( block_fifo_t *fifo, size_t max_depth, size_t max_size );
- void block_FifoEmpty( block_fifo_t * );
- size_t block_FifoPut( block_fifo_t *, block_t * );
- void block_FifoWake( block_fifo_t * );
- block_t * block_FifoGet( block_fifo_t * ) ;
- block_t * block_FifoShow( block_fifo_t * );
- size_t block_FifoSize( const block_fifo_t *p_fifo ) ;
- size_t block_FifoCount( const block_fifo_t *p_fifo ) ;
+block_fifo_t * block_FifoNew ( void );
+void           block_FifoRelease( block_fifo_t * );
+void           block_FifoPace     ( block_fifo_t *fifo, size_t max_depth, size_t max_size ) ;
+void           block_FifoEmpty    ( block_fifo_t * ) ;
+size_t         block_FifoPut      ( block_fifo_t *, block_t * ) ;
+void           block_FifoWake     ( block_fifo_t * ) ;
+block_t *      block_FifoGet      ( block_fifo_t * ) ;
+block_t *      block_FifoShow     ( block_fifo_t * ) ;
+size_t block_FifoSize( const block_fifo_t *p_fifo ) ;
+size_t         block_FifoCount    ( const block_fifo_t *p_fifo );
 
 #endif /* VLC_BLOCK_H */

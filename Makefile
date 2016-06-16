@@ -1,7 +1,7 @@
 VERSION := 0.0.1
 OS ?= $(shell uname -s)
 CWARNFLAGS := -Wall
-CFLAGS := $(CWARNFLAGS) -g -I./build/include 
+CFLAGS := $(CWARNFLAGS) -O2 -I./build/include 
 LDFLAGS:= -L./build/lib 
 LDLIBS := -lpthread \
 		  ./build/lib/libdvbpsi.a

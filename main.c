@@ -420,7 +420,7 @@ static block_t *ParseNALBlock( h264_demux_t *p_dec, bool *pb_used_ts, block_t *p
     if( p_sys->b_slice && ( !p_sys->b_sps || !p_sys->b_pps ) )
     {
         block_ChainRelease( p_sys->p_frame );
-        fprintf( stderr, "waiting for SPS/PPS" );
+        fprintf( stderr, "waiting for SPS/PPS\n" );
 
         /* Reset context */
         p_sys->slice.i_frame_type = 0;
@@ -1001,18 +1001,22 @@ static block_t * demux_read( FILE* fd ){
 	return NULL;
 }
 
+FILE * fd_ts = 0;
 static void h264_ts_callback(void * p_private, unsigned char * p_ts_data , size_t i_size )
 {
-	fprintf( stderr , " Receive h264 ts stream :%d\n",i_size);
+//	fprintf( stderr , " Receive h264 ts stream :%d\n",i_size);
+	if ( fd_ts ) fwrite( p_ts_data,1,i_size,fd_ts);
 }
 
 static void demux_h264 ( const char * filename ){
 	block_t * p_block_in = NULL;
 	uint32_t i_count_nals = 0;
+	mtime_t i_dts = 0; 
 	h264_demux_t * p_pack = demux_open();
 	sout_mux_t * p_mux = soutOpen(NULL,h264_ts_callback,NULL);
 	sout_input_t * p_h264_input = 0;
 	FILE *fd = fopen( filename ,"rb");
+	fd_ts = fopen("h264.ts","w+b");
 	while ( (p_block_in = demux_read(fd) ) )
 	{
 		
@@ -1031,14 +1035,15 @@ static void demux_h264 ( const char * filename ){
 							,p_block_out->i_buffer);
 			
 			if ( p_pack->b_header && p_h264_input == NULL ){
+				fprintf(stderr ,"add new stream\n");
 				p_h264_input = soutAddStream(p_mux,&p_pack->fmt_out);
 			}
+			p_block_out->i_dts = VLC_TS_0 + i_dts;
+			p_block_out->i_pts = VLC_TS_0 + i_dts;
 			if ( p_h264_input )
-				sout_block_mux(p_h264_input,p_block_out);
-			
-			block_Release(p_block_out);
-			
+				sout_block_mux(p_h264_input,p_block_out);						
 			p_block_out = p_next;
+			i_dts += (int64_t)((double)1000000.0 / 15);
 		}
 	}
 	fprintf(stderr,"video (%d x %d ) \n",p_pack->fmt_out.video.i_width
@@ -1047,30 +1052,16 @@ static void demux_h264 ( const char * filename ){
 		soutDelStream(p_mux,p_h264_input);
 	soutClose(p_mux);
 	demux_close(p_pack);
+	if ( fd )
+		fclose(fd);
+	if ( fd_ts )
+		fclose(fd_ts);
 }
 
 int main( int argc , char ** argv)
 {
 	fprintf(stderr,"this is a test for mpeg ts stream...\n");
-
-	char *p = "hello block_t";
-	unsigned char *pp;
-	csa_t *p_csa = 0;
-	block_t *p_buffer = block_Alloc( strlen(p) );
-	pp=p_buffer->p_buffer;
-	p_buffer->p_buffer = (unsigned char *)p;
-	fprintf(stderr,"test block_t : %s,%zu\n",(char*)p_buffer->p_buffer,p_buffer->i_buffer);
-	p_buffer->p_buffer = pp;
-	block_Release(p_buffer);
-	
-	p_csa = csa_New();
-	
-	csa_Delete(p_csa);
-	
-	sout_mux_t * p_mux = soutOpen(NULL,NULL,0);
-	
-	soutClose(p_mux);
-	
+		
 	demux_h264(argv[1]);
 	
 	return 0;

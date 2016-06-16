@@ -346,13 +346,16 @@ int  EStoPES (  block_t **pp_pes, block_t *p_es,
     {
         /* For MPEG4 video, add VOL before I-frames,
            for H264 add SPS/PPS before keyframes*/
+
         p_es = block_Realloc( p_es, p_fmt->i_extra, p_es->i_buffer );
 
         memcpy( p_es->p_buffer, p_fmt->p_extra, p_fmt->i_extra );
+
     }
 
     if( p_fmt->i_codec == VLC_CODEC_H264 )
     {
+
         int offset=2;
         while(offset < p_es->i_buffer )
         {
@@ -443,6 +446,5 @@ int  EStoPES (  block_t **pp_pes, block_t *p_es,
 
         i_dts += i_length;
     }
-
     return 0;
 }
