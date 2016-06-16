@@ -1029,8 +1029,12 @@ static void demux_h264 ( const char * filename ){
 			
 			int	 i_nal_type = p_block_out->p_buffer[4]&0x1f;
 
-			fprintf(stderr,"demux h264 : %d naltype : %d nal_length : %d\n"
+			fprintf(stderr,"demux h264 : %d startCode %d %d %d %d , naltype : %d nal_length : %d\n"
 							,++i_count_nals
+							,p_block_out->p_buffer[0]
+							,p_block_out->p_buffer[1]
+							,p_block_out->p_buffer[2]
+							,p_block_out->p_buffer[3]
 							,i_nal_type
 							,p_block_out->i_buffer);
 			
@@ -1052,6 +1056,7 @@ static void demux_h264 ( const char * filename ){
 		soutDelStream(p_mux,p_h264_input);
 	soutClose(p_mux);
 	demux_close(p_pack);
+	
 	if ( fd )
 		fclose(fd);
 	if ( fd_ts )
