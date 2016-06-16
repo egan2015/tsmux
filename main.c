@@ -361,7 +361,7 @@ static block_t * demux(h264_demux_t * p_pack, block_t **pp_block)
             }
             else
             {
-                //p_pic = PacketizeParse(p_pack, &b_used_ts, p_pic );
+                p_pic = PacketizeParse(p_pack, &b_used_ts, p_pic );
                 if( b_used_ts )
                 {
                     p_block_bytestream->i_dts = VLC_TS_INVALID;
