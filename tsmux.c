@@ -793,7 +793,7 @@ static int DelStream( sout_mux_t *p_mux, sout_input_t *p_input )
             /* Empty TS buffer */
             /* FIXME */
         }
-       fprintf( stderr, "new PCR PID is %d", p_sys->i_pcr_pid );
+       fprintf( stderr, "new PCR PID is %d\n", p_sys->i_pcr_pid );
     }
 
     /* Empty all data in chain_pes */

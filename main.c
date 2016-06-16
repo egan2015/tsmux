@@ -1009,7 +1009,7 @@ static void h264_ts_callback(void * p_private, unsigned char * p_ts_data , size_
 }
 
 static void demux_h264 ( const char * filename ){
-	block_t * p_block_in = NULL;
+	block_t *p_block_in, *p_block_out;
 	uint32_t i_count_nals = 0;
 	mtime_t i_dts = 0; 
 	h264_demux_t * p_pack = demux_open();
@@ -1019,9 +1019,10 @@ static void demux_h264 ( const char * filename ){
 	fd_ts = fopen("h264.ts","w+b");
 	while ( (p_block_in = demux_read(fd) ) )
 	{
-		
-		block_t * p_block_out = demux(p_pack,&p_block_in);
-		
+		p_block_in->i_dts = VLC_TS_0;
+		p_block_in->i_pts = VLC_TS_0;
+
+		while( (p_block_out = demux(p_pack,&p_block_in)))
 		while ( p_block_out ){
 			block_t * p_next = p_block_out->p_next;
 			
@@ -1040,13 +1041,13 @@ static void demux_h264 ( const char * filename ){
 			
 			if ( p_pack->b_header && p_h264_input == NULL ){
 				fprintf(stderr ,"add new stream\n");
-				//p_h264_input = soutAddStream(p_mux,&p_pack->fmt_out);
+				p_h264_input = soutAddStream(p_mux,&p_pack->fmt_out);
 			}
 			p_block_out->i_dts = VLC_TS_0 + i_dts;
 			p_block_out->i_pts = VLC_TS_0 + i_dts;
 			if ( p_h264_input )
 				sout_block_mux(p_h264_input,p_block_out);						
-				if ( fd_ts ) fwrite(p_block_out->p_buffer,1,p_block_out->i_buffer,fd_ts);
+				//if ( fd_ts ) fwrite(p_block_out->p_buffer,1,p_block_out->i_buffer,fd_ts);
 			p_block_out = p_next;
 			i_dts += (int64_t)((double)1000000.0 / 15);
 			
@@ -1070,6 +1071,8 @@ int main( int argc , char ** argv)
 	fprintf(stderr,"this is a test for mpeg ts stream...\n");
 		
 	demux_h264(argv[1]);
+	
+	fprintf(stderr,"demux h264 end\n");
 	
 	return 0;
 }
