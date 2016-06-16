@@ -361,7 +361,7 @@ static block_t * demux(h264_demux_t * p_pack, block_t **pp_block)
             }
             else
             {
-                p_pic = PacketizeParse(p_pack, &b_used_ts, p_pic );
+                //p_pic = PacketizeParse(p_pack, &b_used_ts, p_pic );
                 if( b_used_ts )
                 {
                     p_block_bytestream->i_dts = VLC_TS_INVALID;
@@ -1040,14 +1040,16 @@ static void demux_h264 ( const char * filename ){
 			
 			if ( p_pack->b_header && p_h264_input == NULL ){
 				fprintf(stderr ,"add new stream\n");
-				p_h264_input = soutAddStream(p_mux,&p_pack->fmt_out);
+				//p_h264_input = soutAddStream(p_mux,&p_pack->fmt_out);
 			}
 			p_block_out->i_dts = VLC_TS_0 + i_dts;
 			p_block_out->i_pts = VLC_TS_0 + i_dts;
 			if ( p_h264_input )
 				sout_block_mux(p_h264_input,p_block_out);						
+				if ( fd_ts ) fwrite(p_block_out->p_buffer,1,p_block_out->i_buffer,fd_ts);
 			p_block_out = p_next;
 			i_dts += (int64_t)((double)1000000.0 / 15);
+			
 		}
 	}
 	fprintf(stderr,"video (%d x %d ) \n",p_pack->fmt_out.video.i_width
