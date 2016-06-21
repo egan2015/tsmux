@@ -1041,6 +1041,11 @@ static void demux_h264 ( const char * filename ){
 			
 			if ( p_pack->b_header && p_h264_input == NULL ){
 				fprintf(stderr ,"add new stream\n");
+				es_format_t fmt;
+				fmt.i_codec = VLC_CODEC_H264;
+				fmt.i_cat = VIDEO_ES;
+				fmt.p_extra = 0;
+				fmt.i_extra = 0;				
 				p_h264_input = soutAddStream(p_mux,&p_pack->fmt_out);
 			}
 			p_block_out->i_dts = VLC_TS_0 + i_dts;
@@ -1072,7 +1077,7 @@ int main( int argc , char ** argv)
 		
 	demux_h264(argv[1]);
 	
-	fprintf(stderr,"demux h264 end\n");
+	fprintf(stderr,"demux h264 end\n"); 
 	
 	return 0;
 }
